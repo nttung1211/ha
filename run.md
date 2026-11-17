@@ -3,7 +3,7 @@
 Open a new pane holding a shell, then type the agent command into it, exactly as a person opens a pane and types `claude`. When the agent exits, the shell stays.
 
 ```
-ha run <agent> <name> [-i|--in [space/]tab] [-a|--at dir] [-m|--model M] [-e|--effort E] [task…]
+ha run <agent> <name> [-i|--in [space/]tab] [-a|--at dir] [-m|--model M] [-e|--effort E] [-s|--session S] [task…]
 ```
 
 | Part | Meaning |
@@ -14,6 +14,7 @@ ha run <agent> <name> [-i|--in [space/]tab] [-a|--at dir] [-m|--model M] [-e|--e
 | `-a`, `--at` | Working folder. Default: the target space's `folder`. A relative path resolves against that folder. For a space being created, see "Creating a missing space" |
 | `-m`, `--model` | Passed to the agent as its model flag |
 | `-e`, `--effort` | Passed to the agent as its effort flag |
+| `-s`, `--session` | Claude session name, shown in the Claude mobile app, `/resume` and the terminal title. Default `ha/<machine>/<name>` (see "Machine name"). Non-empty, no `'` and no newline. Only `claude` uses it |
 | `task…` | Everything after the flags. Sent to the agent verbatim once it is ready. Add nothing to it |
 
 `--in` resolution (names compared trimmed, your own space checked first):
@@ -34,6 +35,7 @@ If your own terminal is not in `herdr-app ls` (a hidden background worker), you 
 ## Steps
 
 1. **Parse and validate.** `<name>` must match `^[a-z0-9_-]{1,32}$`. Run `hc ls --all --json`: if a **live** terminal already has that name, stop and ask for another. If only finished terminals have it, continue, but address the new terminal by its address (`tN`) afterwards and mention the clash in the report.
+   Check `--session` if given (non-empty, no `'`, no newline). If `<agent>` is `claude` and there is no `--session`, resolve the machine name now, before anything is created ("Machine name" below), and use `ha/<machine>/<name>`.
 2. **Resolve ids** from `herdr-app ls`: your space and tab (see SKILL.md), then the target space id `sp…` and, unless a new tab is needed, the target tab id `tb…`. Resolve the folder from `--at` and check it exists. If the target space does not exist, follow "Creating a missing space" below, then continue at step 3 with the tab it gives you.
 3. **Open the pane** (no parent, so it lives on like a pane the person opened):
 
@@ -51,10 +53,12 @@ If your own terminal is not in `herdr-app ls` (a hidden background worker), you 
 
    | Agent | Command typed |
    |---|---|
-   | `claude` | `claude [--model M] [--effort E]` |
+   | `claude` | `claude [--model M] [--effort E] -n '<session>' --remote-control '<session>'` |
    | `agy` | `agy [--model M] [--effort E]` |
    | `codex` | `codex --no-daemon …`. hc requires `--no-daemon`. Check `codex --help` for the model and effort flags |
    | `grok` | `grok …`. Check `grok --help` for the model and effort flags |
+
+   The session name is always single-quoted. Only `claude` gets it; other agents get no session flag.
 
    ```sh
    hc send <address> "<command>"
@@ -66,7 +70,16 @@ If your own terminal is not in `herdr-app ls` (a hidden background worker), you 
 
 5. **Send the task**, if any, verbatim: `hc send <address> "<task>"`. Confirm the reply shows `"started": true`; otherwise `hc read` before deciding anything. Never resend blindly.
 
-6. **Report** in one short block: name, address, `space / tab`, folder, the command typed, whether a task was sent, and whether the space (and its folder) was created.
+6. **Report** in one short block: name, address, `space / tab`, folder, the command typed, the session name (claude), whether a task was sent, and whether the space (and its folder) was created. If `--session` was given to another agent, say it was ignored.
+
+## Machine name
+
+The Claude mobile app lists sessions from every machine, and the names the phone gives machines cannot be read on the computer, so ha asks for this machine's name once and keeps it in `~/.config/ha/config.json` (see SKILL.md).
+
+1. Read `machine` from `~/.config/ha/config.json`. Present: use it.
+2. Missing (no file, or no key): read `name` from `~/.local/state/herdr-core/default/core.json` and ask once: `Machine name for session names? (Herdr calls this machine "<core name>")`. The core name is the suggested answer.
+3. The answer must match `^[A-Za-z0-9_-]{1,32}$`. Otherwise save nothing, say which characters are allowed and ask again.
+4. Save it: `mkdir -p ~/.config/ha`, then write the file with `machine` set and every other key kept. Continue with `run`.
 
 ## Creating a missing space
 
@@ -94,8 +107,9 @@ Only when `--in` names a space (`space/tab` or `space/`) that `herdr-app ls` doe
 ## Examples
 
 ```
-/ha run claude reviewer                              Claude pane "reviewer" in your tab
+/ha run claude reviewer                              Claude pane "reviewer" in your tab, session ha/<machine>/reviewer
 /ha run claude reviewer -m opus -e high review src   with model, effort and a first task
+/ha run claude reviewer -s "api review"              session named "api review"
 /ha run agy tester -i executor -a ./web run e2e      Antigravity in tab executor, folder <space>/web
 /ha run shell ops -i journal/                        new tab "ops" in space journal, shell only
 ```
@@ -109,4 +123,5 @@ Only when `--in` names a space (`space/tab` or `space/`) that `herdr-app ls` doe
 | `--argv '["claude"]'` or `hc run … claude` | The agent is the pane's program; when it exits the pane dies | Open a shell, then `hc send` the command |
 | Leaving out `--no-parent` | The pane is your child: it dies when you exit and you get exit notes | Always `--no-parent` |
 | `hc send <name>` when a finished terminal shares the name | Can resolve to the stale terminal | Use the address from step 3 |
+| Typing the session name unquoted | A name with spaces splits into several arguments | Always single-quote it |
 | `herdr-app do pane.split` without `pane` | Splits whatever pane the person has focused | Use `hc run` with labels as above |
