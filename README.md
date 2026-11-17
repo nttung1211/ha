@@ -11,7 +11,7 @@ npx skills add nttung1211/ha
 ## Usage
 
 ```
-/ha run  <agent> <name> [-i [space/]tab] [-a dir] [-m model] [-e effort] [task]
+/ha run  <agent> <name> [-i [space/]tab] [-a dir] [-m model] [-e effort] [-s session] [task]
 /ha send <to> [-w] [-r] <text>
 /ha man
 ```
