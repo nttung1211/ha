@@ -15,7 +15,10 @@ RUN   open a pane with a shell, then type the agent command into it
   <name>             name for the new terminal (a-z 0-9 - _, up to 32); used by send
   -i, --in           where: tab (in your space) | space/tab | space/ (new tab)
                      default: your own tab; a missing tab is created;
-                     a missing space: asks whether to create it
+                     a missing space: asks whether to create it, with folder
+                     <current dir>/<space> (created too if missing);
+                     new space names: A-Z a-z 0-9 - _ only
+                     a bare name (test) is always a tab; write test/ for a space
   -a, --at           working folder; default: the space's folder; relative to it
   -m, --model        model flag passed to the agent
   -e, --effort       effort flag passed to the agent
