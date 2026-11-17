@@ -11,7 +11,7 @@ ha run <agent> <name> [-i|--in [space/]tab] [-a|--at dir] [-m|--model M] [-e|--e
 | `<agent>` | Required. `claude`, `agy`, `codex`, `grok` or `shell` |
 | `<name>` | Required. The new terminal's hc name, used later to address it. 1–32 chars of `a-z 0-9 - _` |
 | `-i`, `--in` | Where the pane goes (table below). Default: your own tab |
-| `-a`, `--at` | Working folder. Default: the target space's `folder`. A relative path resolves against that folder |
+| `-a`, `--at` | Working folder. Default: the target space's `folder`. A relative path resolves against that folder. For a space being created, see "Creating a missing space" |
 | `-m`, `--model` | Passed to the agent as its model flag |
 | `-e`, `--effort` | Passed to the agent as its effort flag |
 | `task…` | Everything after the flags. Sent to the agent verbatim once it is ready. Add nothing to it |
@@ -66,27 +66,30 @@ If your own terminal is not in `herdr-app ls` (a hidden background worker), you 
 
 5. **Send the task**, if any, verbatim: `hc send <address> "<task>"`. Confirm the reply shows `"started": true`; otherwise `hc read` before deciding anything. Never resend blindly.
 
-6. **Report** in one short block: name, address, `space / tab`, folder, the command typed, whether a task was sent, and whether the space was created.
+6. **Report** in one short block: name, address, `space / tab`, folder, the command typed, whether a task was sent, and whether the space (and its folder) was created.
 
 ## Creating a missing space
 
-Only when `--in` names a space (`space/tab` or `space/`) that `herdr-app ls` does not show. A bare tab name never creates a space.
+Only when `--in` names a space (`space/tab` or `space/`) that `herdr-app ls` does not show. A bare tab name never creates a space: `-i test` is always a tab; write `-i test/` for a space.
 
-1. **Ask first, create nothing yet.** Say the space does not exist, list the spaces that do, and ask whether to create it, showing the folder it would use:
-   - `--at` absolute: that folder.
-   - `--at` relative: resolved against your own space's folder (or your working directory if you have no space).
-   - no `--at`: your own space's folder (or your working directory if you have no space).
+1. **Check the name.** A new space name must match `^[A-Za-z0-9_-]+$` (letters, digits, `-`, `_`). Otherwise create nothing: say which characters are allowed and ask for another name.
+2. **Work out the folder.** "Your working directory" is your own current directory (`pwd`), not your space's folder.
+   - no `--at`: `<your working directory>/<space>`. Started in `~/dev/bwa`, `-i test/` gives `~/dev/bwa/test`.
+   - `--at` absolute: that folder, as given (no `/<space>` added).
+   - `--at` relative: resolved against your working directory (no `/<space>` added).
 
-   The folder must exist. If the user says no, stop. If they give another folder or name, use it.
-2. **Create it**, naming its first tab (`tab`, or `<name>` for `space/`), so no rename is needed:
+   Check whether that folder exists.
+3. **Ask once, create nothing yet.** Say the space does not exist, list the spaces that do, and ask one question covering both: create space `<space>` with folder `<folder>`, and, if the folder is missing, say it will be created too. Example: `Space "test" does not exist (spaces: journal, antrail). Create it with folder ~/dev/bwa/test? The folder does not exist yet; it will be created.` If the user says no, stop. If they give another folder or name, check it again from step 1.
+4. **Create the folder** if it was missing: `mkdir -p <folder>`. Every terminal opened in the new space starts here by default.
+5. **Create the space**, naming its first tab (`tab`, or `<name>` for `space/`), so no rename is needed:
 
    ```sh
    herdr-app do space.new '{"name":"<space>","folder":"<folder>","tab":"<tab>","focus":false}'
    ```
 
    Herdr starts a plain shell in that tab. Read its `terminal` (and `pane`) from the reply, then find that terminal in `herdr-app ls`: its enclosing space and tab give the new `sp…` and `tb…`.
-3. **Open the pane** as in step 3, with both `herdr.space=<sp…>` and `herdr.tab=<tb…>`, and `--cwd <folder>`.
-4. **Close the starter shell** only after the new pane appears in `herdr-app ls`: `herdr-app do pane.close '{"pane":"<starter pane>"}'`. Closing it first would empty the tab.
+6. **Open the pane** as in step 3, with both `herdr.space=<sp…>` and `herdr.tab=<tb…>`, and `--cwd <folder>`.
+7. **Close the starter shell** only after the new pane appears in `herdr-app ls`: `herdr-app do pane.close '{"pane":"<starter pane>"}'`. Closing it first would empty the tab.
 
 ## Examples
 
