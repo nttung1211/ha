@@ -76,10 +76,11 @@ If your own terminal is not in `herdr-app ls` (a hidden background worker), you 
 
 The Claude mobile app lists sessions from every machine, and the names the phone gives machines cannot be read on the computer, so ha asks for this machine's name once and keeps it in `~/.config/ha/config.json` (see SKILL.md).
 
-1. Read `machine` from `~/.config/ha/config.json`. Present: use it.
-2. Missing (no file, or no key): read `name` from `~/.local/state/herdr-core/default/core.json` and ask once: `Machine name for session names? (Herdr calls this machine "<core name>")`. The core name is the suggested answer.
-3. The answer must match `^[A-Za-z0-9_-]{1,32}$`. Otherwise save nothing, say which characters are allowed and ask again.
-4. Save it: `mkdir -p ~/.config/ha`, then write the file with `machine` set and every other key kept. Continue with `run`.
+1. If `~/.config/ha/config.json` exists but is not a valid JSON object, say so and stop, before asking anything: never overwrite it.
+2. Read `machine` from it. Present: use it.
+3. Missing (no file, or no key): read `name` from `~/.local/state/herdr-core/default/core.json` and ask once: `Machine name for session names? (Herdr calls this machine "<core name>")`. The core name is the suggested answer: a reply of `yes`, `ok` or nothing accepts the suggestion.
+4. The name must match `^[A-Za-z0-9_-]{1,32}$`. Otherwise save nothing, say which characters are allowed and ask again.
+5. Save it: `mkdir -p ~/.config/ha`, then write the file with `machine` set and every other key kept. Continue with `run`.
 
 ## Creating a missing space
 
