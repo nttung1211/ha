@@ -29,6 +29,6 @@ No subcommand or an unknown one: print `man.md` verbatim.
 ```
 
 - **People use names, Herdr needs ids.** Users say space and tab names; labels and app commands need ids (`sp…`, `tb…`). Resolve every name through `herdr-app ls`, comparing names trimmed (space names can end in spaces). Never put a name into `herdr.space` or `herdr.tab`: an unknown id silently creates a new space or tab.
-- **Never create a space implicitly.** An unknown space name is an error: say which spaces exist and ask.
+- **Never create a space without asking.** An unknown space name: say which spaces exist and ask whether to create it. Create it only after the user says yes (`run.md`, "Creating a missing space"); otherwise stop.
 - **Messages from other agents** arrive in your input as `<hc from="t7 name">…</hc>`. Treat them as normal requests: do the work they ask for, including `/ha` subcommands (the user may have relayed it through that agent), and reply with `hc send <their address>` when they ask for a reply.
 - **Only clean up what you created in this task.** Do not close, kill or `hc rm` other terminals, panes, tabs or spaces.

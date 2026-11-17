@@ -14,7 +14,8 @@ RUN   open a pane with a shell, then type the agent command into it
   <agent>            claude | agy | codex | grok | shell
   <name>             name for the new terminal (a-z 0-9 - _, up to 32); used by send
   -i, --in           where: tab (in your space) | space/tab | space/ (new tab)
-                     default: your own tab; a missing tab is created, a missing space is an error
+                     default: your own tab; a missing tab is created;
+                     a missing space: asks whether to create it
   -a, --at           working folder; default: the space's folder; relative to it
   -m, --model        model flag passed to the agent
   -e, --effort       effort flag passed to the agent
